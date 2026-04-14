@@ -33,3 +33,13 @@ class OrderItem(db.Model):
 
     def __repr__(self):
         return f"<OrderItem {self.menu_name} x {self.quantity}>"
+
+class AppSetting(db.Model):
+    __tablename__ = "app_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.String(200), nullable=True)
+
+    def __repr__(self):
+        return f"<AppSetting {self.key}={self.value}>"
