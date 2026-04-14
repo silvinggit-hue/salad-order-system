@@ -1,9 +1,10 @@
 from collections import defaultdict, OrderedDict
-from datetime import datetime, date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from flask import Blueprint, render_template, request, redirect, url_for
 from app.menu_data import MENU_DATA, SAUCE_OPTIONS, PEOPLE_OPTIONS
-from app.models import db, Order, OrderItem
+from app.models import db, Order, OrderItem, AppSetting
 
 main = Blueprint("main", __name__)
 
@@ -70,21 +71,37 @@ def build_sms_text(orders):
     lines.extend(section_lines("포장", takeout_orders))
 
     return "\n".join(lines).strip()
+def reset_orders_after_3pm():
+    kst = ZoneInfo("Asia/Seoul")
+    now_kst = datetime.now(kst)
 
-def cleanup_old_orders():
-    today = date.today()
-    orders = Order.query.all()
+    # 오후 3시 이전이면 아무것도 안 함
+    if now_kst.hour < 15:
+        return
 
-    for order in orders:
-        if order.created_at.date() != today:
-            db.session.delete(order)
+    today_str = now_kst.strftime("%Y-%m-%d")
 
+    setting = AppSetting.query.filter_by(key="last_reset_date").first()
+    if not setting:
+        setting = AppSetting(key="last_reset_date", value="")
+        db.session.add(setting)
+        db.session.commit()
+
+    # 오늘 이미 리셋했으면 종료
+    if setting.value == today_str:
+        return
+
+    # 전체 주문 삭제
+    OrderItem.query.delete()
+    Order.query.delete()
+
+    # 오늘 리셋 완료 기록
+    setting.value = today_str
     db.session.commit()
-
 
 @main.route("/")
 def index():
-    cleanup_old_orders()
+    reset_orders_after_3pm()
     edit_order_id = request.args.get("edit_order_id", type=int)
 
     selected_customer = ""
@@ -207,7 +224,7 @@ def submit_order():
 
 @main.route("/admin")
 def admin():
-    cleanup_old_orders()
+    reset_orders_after_3pm()
     orders = Order.query.order_by(Order.created_at.desc()).all()
 
     dine_in_orders = [o for o in orders if o.order_type == "매장"]
