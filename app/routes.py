@@ -36,32 +36,83 @@ def build_sms_text(orders):
     dine_in_orders = [o for o in orders if o.order_type == "매장"]
     takeout_orders = [o for o in orders if o.order_type == "포장"]
 
+    # menu_data.py에 등록된 카테고리/메뉴 순서 기준으로 정렬
+    menu_order_map = {}
+    category_order_map = {}
+
+    for category_index, (category, items) in enumerate(MENU_DATA.items()):
+        category_order_map[category] = category_index
+        for menu_index, item in enumerate(items):
+            menu_order_map[item["name"]] = {
+                "category": category,
+                "category_order": category_index,
+                "menu_order": menu_index,
+            }
+
+    sauce_order_map = {
+        sauce: index
+        for index, sauce in enumerate(SAUCE_OPTIONS)
+    }
+
     def aggregate_items(order_list):
-        aggregated = OrderedDict()
+        aggregated = {}
 
         for order in order_list:
             for item in order.items:
-                key = (item.menu_name, item.sauce or "")
-                if key not in aggregated:
-                    aggregated[key] = 0
-                aggregated[key] += item.quantity
+                menu_info = menu_order_map.get(item.menu_name, {})
+                category = menu_info.get("category", item.category)
 
-        return aggregated
+                key = (item.menu_name, item.sauce or "")
+
+                if key not in aggregated:
+                    aggregated[key] = {
+                        "menu_name": item.menu_name,
+                        "sauce": item.sauce or "",
+                        "quantity": 0,
+                        "category": category,
+                        "category_order": menu_info.get("category_order", 999),
+                        "menu_order": menu_info.get("menu_order", 999),
+                        "sauce_order": sauce_order_map.get(item.sauce or "", 999),
+                    }
+
+                aggregated[key]["quantity"] += item.quantity
+
+        sorted_items = sorted(
+            aggregated.values(),
+            key=lambda x: (
+                x["category_order"],
+                x["menu_order"],
+                x["sauce_order"],
+                x["sauce"]
+            )
+        )
+
+        return sorted_items
 
     def section_lines(title, order_list):
-        lines = [f"[{title}]"]
+        person_count = len(order_list)
+        lines = [f"{title} 인원: {person_count}명", f"[{title}]"]
 
-        aggregated = aggregate_items(order_list)
+        items = aggregate_items(order_list)
 
-        if not aggregated:
+        if not items:
             lines.append("없음")
             return lines
 
-        for (menu_name, sauce), total_qty in aggregated.items():
-            if sauce:
-                lines.append(f"{menu_name} {total_qty}개({sauce})")
+        current_category = None
+
+        for item in items:
+            # 카테고리가 바뀔 때 한 줄 띄우고 싶으면 아래 로직 사용
+            # 첫 항목 전에는 줄바꿈 안 함
+            if current_category is not None and current_category != item["category"]:
+                lines.append("")
+
+            current_category = item["category"]
+
+            if item["sauce"]:
+                lines.append(f"{item['menu_name']} {item['quantity']}개({item['sauce']})")
             else:
-                lines.append(f"{menu_name} {total_qty}개")
+                lines.append(f"{item['menu_name']} {item['quantity']}개")
 
         return lines
 
@@ -71,6 +122,7 @@ def build_sms_text(orders):
     lines.extend(section_lines("포장", takeout_orders))
 
     return "\n".join(lines).strip()
+    
 def reset_orders_after_3pm():
     kst = ZoneInfo("Asia/Seoul")
     now_kst = datetime.now(kst)
