@@ -1,5 +1,24 @@
 document.addEventListener("DOMContentLoaded", function () {
     const qtyButtons = document.querySelectorAll(".qty-btn");
+    const qtyInputs = document.querySelectorAll(".qty-input");
+    const totalPriceEl = document.getElementById("live-total-price");
+
+    function updateTotalPrice() {
+        let total = 0;
+
+        qtyInputs.forEach((input) => {
+            const quantity = parseInt(input.value || "0", 10);
+            const price = parseInt(input.dataset.price || "0", 10);
+
+            if (!isNaN(quantity) && !isNaN(price) && quantity > 0) {
+                total += quantity * price;
+            }
+        });
+
+        if (totalPriceEl) {
+            totalPriceEl.textContent = total.toLocaleString("ko-KR");
+        }
+    }
 
     qtyButtons.forEach((button) => {
         button.addEventListener("click", function () {
@@ -19,7 +38,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 input.value = Math.max(0, currentValue - 1);
             }
 
-            input.dispatchEvent(new Event("change"));
+            updateTotalPrice();
         });
     });
+
+    qtyInputs.forEach((input) => {
+        input.addEventListener("input", updateTotalPrice);
+        input.addEventListener("change", updateTotalPrice);
+    });
+
+    updateTotalPrice();
 });
