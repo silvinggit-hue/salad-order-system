@@ -15,7 +15,7 @@ PEOPLE_OPTIONS = [
 
 MENU_DATA = {
     "샐러드": [
-        {"id": "salad_1", "name": "수비드 닭가슴살 샐러드", "price": 9000, "requires_sauce": True},
+        {"id": "salad_1", "name": "수비드 닭가슴살 샐러드", "price": 7900, "requires_sauce": True},
         {"id": "salad_2", "name": "보코치니 치즈 샐러드", "price": 8200, "requires_sauce": True},
         {"id": "salad_3", "name": "단호박 리코타 샐러드", "price": 8400, "requires_sauce": True},
         {"id": "salad_4", "name": "듀럼밀 파스타 샐러드", "price": 8200, "requires_sauce": True},
@@ -36,8 +36,9 @@ MENU_DATA = {
         {"id": "half_3", "name": "1/2 당근라페 치킨 샌드위치", "price": 3900, "requires_sauce": False},
     ],
     "세트": [
-        {"id": "set_1", "name": "샐러드 샌드위치 세트1", "price": 8000, "requires_sauce": False},
-        {"id": "set_2", "name": "샐러드 샌드위치 세트2", "price": 8400, "requires_sauce": False},
+        {"id": "set_1", "name": "샐러드 샌드위치 세트(햄치즈에그)", "price": 8000, "requires_sauce": False},
+        {"id": "set_2", "name": "샐러드 샌드위치 세트(당근라페 치킨)", "price": 8400, "requires_sauce": False},
+        {"id": "set_3", "name": "샐러드 샌드위치 세트(치즈 오믈렛)", "price": 8400, "requires_sauce": False},
     ],
     "기타": [
         {"id": "etc_1", "name": "샐러드롤(포두부)", "price": 6800, "requires_sauce": False},
