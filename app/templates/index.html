@@ -72,6 +72,7 @@
                                             min="0"
                                             value="{{ prefill.quantity if prefill.quantity is defined else 0 }}"
                                             class="qty-input"
+                                            data-price="{{ item.price }}"
                                         >
 
                                         <button type="button" class="qty-btn plus-btn" data-target="qty_{{ item.id }}">+</button>
@@ -99,6 +100,10 @@
         {% endfor %}
 
         <div class="submit-area sticky-submit">
+            <div class="live-total-box">
+                총 주문 금액: <span id="live-total-price">0</span>원
+            </div>
+        
             <button type="submit" class="btn">
                 {% if edit_order_id %}수정 저장하기{% else %}주문하기{% endif %}
             </button>
